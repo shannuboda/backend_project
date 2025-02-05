@@ -237,6 +237,8 @@ app.get("/getsem1/:id/:id2/:id3/:id4/:id5", async (req, res) => {
     }
   };
 
+
+  
   // for sem1
   if (semester === "SEMESTER1") {
     Gpa_Result(sem1, semester, regulation);
@@ -287,17 +289,26 @@ app.get("/getsupply/:id/:year/:semester/:branch/:regulation", async (req, res) =
   }
 
   try {
-    const students = await db_name.db.collection(year).find({ rollno: rno }).toArray();
+    let students = await db_name.db.collection(year).find({ rollno: rno }).toArray();
+    
+// console.log(students[0].subjects);
 
     if (!students.length) {
       return res.status(200).json({ message: "No Data Found" });
     }
 
-    // Filter subjects with status "F"
+
+
     let failedSubjects = students[0].subjects.filter((subject) => subject.status === "F");
-    let failedSubjectsCheck = failedSubjects.map((value,index)=>{
-     return {...value,checked:false,id:index+1}
-    })
+    if(!failedSubjects.length){
+      return res.status(200).json({ message: "No Data Found" });
+    }   
+  let failedSubjectsCheck = failedSubjects.map((value, index) => ({
+    ...value,
+    checked: false,
+    id: index + 1,
+  }));
+   
     
     res.json(failedSubjectsCheck);
   } catch (err) {
@@ -400,6 +411,36 @@ app.post("/login", async (req, res) => {
     }
   } catch (err) {
     console.error("Error fetching data from SvPortalusers database:", err);
+    res.status(500).json({ message: "Error fetching data", error: err });
+  }
+});
+
+
+// ADMINS PROGRAMS
+
+const ADMINS_LOGIN = mongoose.createConnection(
+  "mongodb+srv://bssmani16:9z7gYDVx2XNAB3qG@cluster0.oeyyh.mongodb.net/ADMINS?retryWrites=true&w=majority",
+  { useNewUrlParser: true, useUnifiedTopology: true }
+);
+
+ADMINS_LOGIN.on("open", () => console.log("Connected to Database for ADMINS"));
+ADMINS_LOGIN.on("error", (err) =>
+  console.error("Error connecting to Database Student File:", err)
+);
+
+app.post("/admin_login", async (req, res) => {
+  const { mail, password } = req.body;
+  try {
+    const Admin = await ADMINS_LOGIN.db.collection("ACCESS_MEMBERS").findOne({ mail });
+    if (!Admin) {
+      res.status(404).json({ message: "Admin Not Found" });
+    } else if (Admin.password === password) {
+      res.status(200).json({ message: "Success", Admin });
+    } else {
+      res.status(401).json({ message: "Wrong Password" });
+    }
+  } catch (err) {
+    console.error("Error fetching data from Admins database:", err);
     res.status(500).json({ message: "Error fetching data", error: err });
   }
 });
