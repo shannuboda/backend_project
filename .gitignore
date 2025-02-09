@@ -1,0 +1,16 @@
+# Ignore Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Ignore environment variables
+.env
+
+# Ignore build and dependency files
+dist/
+build/
+*.log
+
+# Ignore system files
+.DS_Store
+Thumbs.db
